@@ -34,9 +34,9 @@ class somfyShutter:
         """Create instance with a given shutter name and CUL serial port"""
         try:
             self.serial = serial.Serial(port=cul, baudrate=115200, timeout=1)
-            # self.serial = open(cul)
         except Exception as e:
             print("Could not open CUL device", e)
+            sys.exit(1)
         try:
             configfile = open(str(shutter) + ".json")
             config = json.loads(configfile.read())
@@ -51,17 +51,37 @@ class somfyShutter:
 
         KK - Encryption key
         C - Command (1 = My, 2 = Up, 4 = Down, 8 = Prog)
-        0 - Checksum (set to 0, is calculated automatically)
+        0 - Checksum (set to 0 for calculating checksum)
         RRRR - Rolling code
         AAAAAA - Address (= remote channel)
         """
         if command in self.commands:
-            return("Ys{:02x}{:01x}0{:04x}{:06x}".format(self.config['enc_key'],
-                                                      self.commands[command],
-                                                      self.config['rolling_code'],
-                                                      self.config['address']))
+            command_string = "{:02X}{:01X}0{:04X}{}".format(
+                self.config['enc_key'],
+                self.commands[command],
+                self.config['rolling_code'],
+                self.config['address'])
         else:
             raise NameError('unknown command')
+        command_string = command_string[:3] + self.calculate_checksum(command_string) + command_string[4:]
+        command_string = "Ys" + command_string + "\n"
+        return command_string.encode()
+
+    def calculate_checksum(self, command):
+        """
+        Calculate checksum for command string
+
+        From https://pushstack.wordpress.com/somfy-rts-protocol/ :
+        The checksum is calculated by doing a XOR of all nibbles of the frame.
+        To generate a checksum for a frame set the 'cks' field to 0 before
+        calculating the checksum.
+        """
+        cmd = bytearray(command, 'utf-8')
+        checksum = 0
+        for char in cmd:
+            checksum = checksum ^ char ^ (char >> 4)
+        checksum = checksum & 0xf
+        return("{:01X}".format(checksum))
 
     def increase_rolling_code(self):
         """Increment rolling_code, enc_key lower 4 bit and save to config"""
@@ -81,12 +101,20 @@ class somfyShutter:
     def send_command(self, command):
         """Send command string to serial port with CUL device"""
         try:
-            print(self.command_string(command))
-            self.serial.write(command.encode())
+            command_string = self.command_string(command)
+            self.serial.write(command_string)
+            self.serial.flush()
         except Exception as e:
             print("Could not send command to shutter", e)
             sys.exit(1)
         self.increase_rolling_code()
+
+    def get_cul_version(self):
+        """Get CUL version"""
+        self.serial.write("V\n")
+        self.serial.flush()
+        version = self.serial.readline()
+        print(version)
 
 
 if __name__ == "__main__":
