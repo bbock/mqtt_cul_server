@@ -3,13 +3,13 @@
 Control Somfy RTS blinds via CUL RF USB stick
 
 Script to control somfy blinds.
-Inline configuration, as it is just for me
 """
 
 import argparse
 import json
 import sys
 import serial
+import os
 
 
 class somfyShutter:
@@ -124,7 +124,11 @@ if __name__ == "__main__":
     parser.add_argument('--command', help='command to send', required=True)
     args = parser.parse_args()
 
-    # TODO: sanitization of filename
-    ss = somfyShutter(shutter=args.shutter, cul=args.cul)
+    if not os.path.exists(args.shutter + '.json'):
+        raise ValueError('shutter %s not defined' % args.shutter)
 
+    if not os.path.exists(args.cul):
+        raise ValueError('cannot find CUL device %s' % args.cul)
+
+    ss = somfyShutter(shutter=args.shutter, cul=args.cul)
     ss.send_command(args.command)
