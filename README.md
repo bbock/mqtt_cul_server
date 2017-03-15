@@ -9,6 +9,5 @@ control via the CUL USB stick (www.culfw.de).
 -   Refactor config storage
 -   Write more documentation
 -   Write some tests
--   Add MQTT functionality
 -   Make python 3 compatible?
 -   ... publish to pypi?
