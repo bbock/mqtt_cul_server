@@ -6,6 +6,7 @@ control via the CUL USB stick (www.culfw.de).
 
 # TODO
 
+-   Config / cmd argument for MQTT broker
 -   Refactor config storage
 -   Write more documentation
 -   Write some tests

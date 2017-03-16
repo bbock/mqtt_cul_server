@@ -7,6 +7,7 @@ wireless communication protocol.
 """
 
 import json
+import logging
 
 
 class somfy_shutter:
@@ -99,7 +100,9 @@ class somfy_shutter:
         except Exception as e:
             print("Could not save config to file for device", self.name, e)
 
-    def send_command(self, command_string):
+    def send_command(self, command):
         """Send command string via CUL device"""
+        command_string = self.command_string(command)
+        logging.info("sending command string ", command_string)
         self.cul.send_command(command_string)
         self.increase_rolling_code()
