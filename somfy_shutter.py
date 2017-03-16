@@ -103,6 +103,6 @@ class somfy_shutter:
     def send_command(self, command):
         """Send command string via CUL device"""
         command_string = self.command_string(command)
-        logging.info("sending command string ", command_string)
+        logging.info("sending command string %s" % command_string)
         self.cul.send_command(command_string)
         self.increase_rolling_code()
