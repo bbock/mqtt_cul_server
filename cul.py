@@ -1,11 +1,13 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+"""Helper class to encapsulate serial communication with CUL device"""
 
 import sys
+import logging
 import serial
 
 
-class cul:
+class Cul(object):
     """Helper class to encapsulate serial communication with CUL device"""
 
     serial = ""
@@ -14,8 +16,8 @@ class cul:
         """Create instance with a given serial port"""
         try:
             self.serial = serial.Serial(port=serial_port, baudrate=115200, timeout=1)
-        except Exception as e:
-            print("Could not open CUL device", e)
+        except serial.SerialException as e:
+            logging.error("Could not open CUL device %s", e)
             sys.exit(1)
 
     def get_cul_version(self):
@@ -23,13 +25,13 @@ class cul:
         self.serial.write("V\n")
         self.serial.flush()
         version = self.serial.readline()
-        print(version)
+        return version
 
     def send_command(self, command_string):
         """Send command string to serial port with CUL device"""
         try:
             self.serial.write(command_string)
             self.serial.flush()
-        except Exception as e:
-            print("Could not send command to shutter", e)
+        except serial.SerialException as e:
+            logging.error("Could not send command to CUL device %s", e)
             sys.exit(1)

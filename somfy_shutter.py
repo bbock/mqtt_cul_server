@@ -10,7 +10,7 @@ import json
 import logging
 
 
-class somfy_shutter:
+class SomfyShutter(object):
     """
     Control Somfy RTS blinds via CUL RF USB stick
 
@@ -36,16 +36,29 @@ class somfy_shutter:
 
     def __init__(self, shutter, cul):
         """Create instance with a given shutter name"""
-        try:
-            configfile = open(str(shutter) + ".json")
-            config = json.loads(configfile.read())
-        except Exception as e:
-            print("Could not load config from file for device", shutter, e)
         self.name = shutter
-        self.config = config
+        self.config = self.load_state()
         self.cul = cul
 
-    def calculate_checksum(self, command):
+    def load_state(self):
+        """Load state from JSON file"""
+        try:
+            configfile = open("state/" + str(self.name) + ".json")
+            config = json.loads(configfile.read())
+        except Exception as e:
+            print("Could not load config from file for device", self.name, e)
+        return config
+
+    def save_state(self):
+        """Save state to JSON file"""
+        try:
+            configfile = open("state/" + self.name + ".json", "w")
+            json.dump(self.config, configfile)
+        except IOError as e:
+            print("Could not save config to file for device", self.name, e)
+
+    @classmethod
+    def calculate_checksum(cls, command):
         """
         Calculate checksum for command string
 
@@ -59,7 +72,7 @@ class somfy_shutter:
         for char in cmd:
             checksum = checksum ^ char ^ (char >> 4)
         checksum = checksum & 0xf
-        return("{:01X}".format(checksum))
+        return "{:01X}".format(checksum)
 
     def command_string(self, command):
         """
@@ -92,17 +105,11 @@ class somfy_shutter:
         self.config['enc_key'] += 1
         if self.config['enc_key'] == 0x10:
             self.config['enc_key'] = 0x0
-
-        # TODO extract save to config
-        try:
-            configfile = open(self.name + ".json", "w")
-            json.dump(self.config, configfile)
-        except Exception as e:
-            print("Could not save config to file for device", self.name, e)
+        self.save_state()
 
     def send_command(self, command):
         """Send command string via CUL device"""
         command_string = self.command_string(command)
-        logging.info("sending command string %s" % command_string)
+        logging.info("sending command string %s to %s", command_string, self.name)
         self.cul.send_command(command_string)
         self.increase_rolling_code()
