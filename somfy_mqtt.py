@@ -3,33 +3,39 @@
 
 import argparse
 import os
-import somfy_shutter
-import cul
-import paho.mqtt.client as mqtt
+import sys
 import logging
+import paho.mqtt.client as mqtt
+from cul import Cul
+from somfy_shutter import SomfyShutter
+from intertechno import Intertechno
 
 
-def on_connect(client, userdata, flags, rc):
+def on_connect(client, _userdata, _flags, _rc):
     """The callback for when the MQTT client receives a CONNACK response"""
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe("somfy/#")
+    client.subscribe("intertechno/#")
 
 
-def on_message(client, userdata, msg):
+def on_message(_client, _userdata, msg):
     """The callback for when a PUBLISH message is received"""
-    device = msg.topic.split("/")[-1]
+    devicetype, devicename = msg.topic.split("/")
     command = str(msg.payload)
 
-    if os.path.exists(device + '.json'):
-        try:
-            ss = somfy_shutter.somfy_shutter(device, cul)
-            logging.info('sending command %s to shutter %s' % (command, device))
-            ss.send_command(command)
-        except Exception as e:
-            logging.warning('could not send command: ', e)
+    if devicetype == "somfy":
+        devicehandler = SomfyShutter(devicename, cul)
+    elif devicetype == "intertechno":
+        devicehandler = Intertechno(devicename, cul)
     else:
-        logging.warning('shutter %s not defined' % device)
+        logging.warning('device %s unknown', msg.topic)
+        raise ValueError
+
+    try:
+        devicehandler.send_command(command)
+    except Exception as e:
+        logging.warning('could not send command: %s', e)
 
 
 if __name__ == "__main__":
@@ -44,12 +50,16 @@ if __name__ == "__main__":
     if not os.path.exists(args.cul):
         raise ValueError('cannot find CUL device %s' % args.cul)
 
-    cul = cul.cul(args.cul)
+    cul = Cul(args.cul)
 
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
 
-    client.connect("localhost", 1883, 60)
+    try:
+        client.connect("localhost", 1883, 60)
+    except Exception as e:
+        logging.error("Could not connect to MQTT broker")
+        sys.exit(1)
 
     client.loop_forever()
