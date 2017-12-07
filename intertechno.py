@@ -29,7 +29,7 @@ class Intertechno(object):
         if command == "ON":
             commandbits = "FF"
         elif command == "OFF":
-            commandbits = "0F"
+            commandbits = "F0"
         else:
             raise ValueError("Command %s is not supported", command)
         command_string = "is" + self.address + commandbits + "\n"
