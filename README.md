@@ -12,8 +12,7 @@ Further information about the CUL: www.culfw.de
 # TODO
 
 -   Config / cmd argument for MQTT broker
--   Refactor config storage
+-   Improve device onboarding
 -   Write more documentation
 -   Write some tests
--   Make python 3 compatible?
--   ... publish to pypi?
+-   Make python 3 compatible
