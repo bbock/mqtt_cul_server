@@ -2,3 +2,4 @@ env
 *.pyc
 *.json
 .vscode
+state/

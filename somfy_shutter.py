@@ -8,9 +8,10 @@ wireless communication protocol.
 
 import json
 import logging
+import os
 
 
-class SomfyShutter(object):
+class SomfyShutter:
     """
     Control Somfy RTS blinds via CUL RF USB stick
 
@@ -18,47 +19,73 @@ class SomfyShutter(object):
     wireless communication protocol.
     """
 
-    name = ""
-    config = {}
-    commands = {
-        "my": 1,
-        "up": 2,
-        "my-up": 3,
-        "down": 4,
-        "my-down": 5,
-        "up-down": 6,
-        "my-up-down": 7,
-        "prog": 8,
-        "enable-sun": 9,
-        "disable-sun": 10
-    }
-    cul = ""
+    class SomfyShutterState:
+        def __init__(self, statefile):
+            self.statefile = statefile
+            with open("state/somfy/" + statefile) as statefile:
+                self.state = json.loads(statefile.read())
 
-    def __init__(self, shutter, cul):
-        """Create instance with a given shutter name"""
-        self.name = shutter
-        self.config = self.load_state()
+        def save(self):
+            """Save state to JSON file"""
+            with open("state/somfy/" + self.statefile, "w") as statefile:
+                json.dump(self.state, statefile)
+
+        def increase_rolling_code(self):
+            """Increment rolling_code, enc_key lower 4 bit and save to statefile"""
+            self.state["rolling_code"] += 1
+            # check for overflow
+            if self.state["rolling_code"] == 0x1000000:
+                self.state["rolling_code"] = 0
+            self.state["enc_key"] += 1
+            if self.state["enc_key"] == 0x10:
+                self.state["enc_key"] = 0x0
+            self.save()
+
+    def __init__(self, cul, mqtt_client, prefix):
         self.cul = cul
+        self.prefix = prefix
 
-    def load_state(self):
-        """Load state from JSON file"""
-        try:
-            configfile = open("state/" + str(self.name) + ".json")
-            config = json.loads(configfile.read())
-        except Exception as e:
-            print("Could not load config from file for device", self.name, e)
-        return config
+        self.devices = []
+        for statefile in os.listdir("state/somfy/"):
+            self.devices.append(self.SomfyShutterState(statefile))
 
-    def save_state(self):
-        """Save state to JSON file"""
-        try:
-            configfile = open("state/" + self.name + ".json", "w")
-            json.dump(self.config, configfile)
-        except IOError as e:
-            print("Could not save config to file for device", self.name, e)
+        for device in self.devices:
+            # send messages for device discovery
+            self.send_discovery(device, mqtt_client)
 
-    @classmethod
-    def calculate_checksum(cls, command):
+    def get_component_name(self):
+        return "somfy"
+
+    def send_discovery(self, device, mqtt_client):
+        """
+        Send Home Assistant - compatible discovery messages
+
+        for more information about MQTT-discovery and MQTT switches, see
+        https://www.home-assistant.io/docs/mqtt/discovery/
+        https://www.home-assistant.io/integrations/cover.mqtt/
+
+        There's no state topic, as Somfy is fire-and-forget with no
+        feedback about the state.
+        """
+
+        base_path = self.prefix + "/cover/somfy/" + device.address
+
+        configuration = {
+            "~": base_path,
+            "command_topic": "~/set",
+            "payload_open": "OPEN",
+            "payload_close": "CLOSE",
+            "payload_stop": "STOP",
+            "optimistic": True,
+            "device_class": device.state["device_class"],
+            "name": device.state["name"],
+            "unique_id": "somfy_" + device.state["address"],
+        }
+
+        topic = base_path + "/config"
+        mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
+
+    def calculate_checksum(self, command):
         """
         Calculate checksum for command string
 
@@ -67,14 +94,14 @@ class SomfyShutter(object):
         To generate a checksum for a frame set the 'cks' field to 0 before
         calculating the checksum.
         """
-        cmd = bytearray(command, 'utf-8')
+        cmd = bytearray(command, "utf-8")
         checksum = 0
         for char in cmd:
             checksum = checksum ^ char ^ (char >> 4)
-        checksum = checksum & 0xf
+        checksum = checksum & 0xF
         return "{:01X}".format(checksum)
 
-    def command_string(self, command):
+    def command_string(self, command, device):
         """
         A Somfy command is a hex string of the following form: KKC0RRRRSSSSSS
 
@@ -84,32 +111,67 @@ class SomfyShutter(object):
         RRRR - Rolling code
         SSSSSS - Address (= remote channel)
         """
-        if command in self.commands:
+        commands = {
+            "my": 1,
+            "up": 2,
+            "my-up": 3,
+            "down": 4,
+            "my-down": 5,
+            "up-down": 6,
+            "my-up-down": 7,
+            "prog": 8,
+            "enable-sun": 9,
+            "disable-sun": 10,
+        }
+        if command in commands:
             command_string = "A{:01X}{:01X}0{:04X}{}".format(
-                self.config['enc_key'],
-                self.commands[command],
-                self.config['rolling_code'],
-                self.config['address'])
+                device.state["enc_key"],
+                commands[command],
+                device.state["rolling_code"],
+                device.state["address"],
+            )
         else:
-            raise NameError('unknown command')
-        command_string = command_string[:3] + self.calculate_checksum(command_string) + command_string[4:]
+            raise NameError("unknown command")
+        command_string = (
+            command_string[:3]
+            + self.calculate_checksum(command_string)
+            + command_string[4:]
+        )
         command_string = "Ys" + command_string + "\n"
         return command_string.encode()
 
-    def increase_rolling_code(self):
-        """Increment rolling_code, enc_key lower 4 bit and save to config"""
-        self.config['rolling_code'] += 1
-        # check for overflow
-        if self.config['rolling_code'] == 0x1000000:
-            self.config['rolling_code'] = 0
-        self.config['enc_key'] += 1
-        if self.config['enc_key'] == 0x10:
-            self.config['enc_key'] = 0x0
-        self.save_state()
-
-    def send_command(self, command):
+    def send_command(self, command, device):
         """Send command string via CUL device"""
-        command_string = self.command_string(command)
-        logging.info("sending command string %s to %s", command_string, self.name)
+        command_string = self.command_string(command, device)
+        logging.info("sending command string %s to %s", command_string, device.name)
         self.cul.send_command(command_string)
-        self.increase_rolling_code()
+        device.increase_rolling_code()
+
+    def on_message(self, message):
+        prefix, devicetype, component, devicename = message.topic.split("/")
+        command = str(message.payload)
+
+        if prefix != self.prefix:
+            logging.info("Ignoring message due to prefix")
+            return
+        if devicetype != "cover":
+            raise ValueError("Somfy can only handle covers")
+        if component != "somfy":
+            raise ValueError("Received command for different component")
+
+        device = None
+        for d in self.devices:
+            if d.state["name"] == devicename:
+                device = d
+                break
+        if not device:
+            raise ValueError("Device not found")
+
+        if command == "OPEN":
+            self.send_command("up", device)
+        elif command == "CLOSE":
+            self.send_command("down", device)
+        elif command == "STOP":
+            self.send_command("my", device)
+        else:
+            raise ValueError("Command %s is not supported", command)
