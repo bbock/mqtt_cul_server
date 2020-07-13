@@ -22,13 +22,13 @@ class SomfyShutter:
     class SomfyShutterState:
         def __init__(self, statefile):
             self.statefile = statefile
-            with open("state/somfy/" + statefile) as statefile:
-                self.state = json.loads(statefile.read())
+            with open("state/somfy/" + statefile) as fh:
+                self.state = json.loads(fh.read())
 
         def save(self):
             """Save state to JSON file"""
-            with open("state/somfy/" + self.statefile, "w") as statefile:
-                json.dump(self.state, statefile)
+            with open("state/somfy/" + self.statefile, "w") as fh:
+                json.dump(self.state, fh)
 
         def increase_rolling_code(self):
             """Increment rolling_code, enc_key lower 4 bit and save to statefile"""
@@ -47,7 +47,8 @@ class SomfyShutter:
 
         self.devices = []
         for statefile in os.listdir("state/somfy/"):
-            self.devices.append(self.SomfyShutterState(statefile))
+            if ".json" in statefile:
+                self.devices.append(self.SomfyShutterState(statefile))
 
         for device in self.devices:
             # send messages for device discovery
@@ -68,7 +69,7 @@ class SomfyShutter:
         feedback about the state.
         """
 
-        base_path = self.prefix + "/cover/somfy/" + device.address
+        base_path = self.prefix + "/cover/somfy/" + device.state["address"]
 
         configuration = {
             "~": base_path,

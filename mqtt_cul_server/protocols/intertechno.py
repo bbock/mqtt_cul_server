@@ -32,7 +32,6 @@ class Intertechno:
     def get_component_name(self):
         return "intertechno"
 
-
     def send_discovery(self, mqtt_client):
         """
         Send Home Assistant - compatible discovery messages
@@ -89,9 +88,7 @@ class Intertechno:
             raise ValueError("Command %s is not supported", command)
 
         if devicename[0:5] != self.system_id:
-            logging.info(
-                "Received command for different Intertechno system. Ignoring."
-            )
+            logging.info("Received command for different Intertechno system. Ignoring.")
             return
 
         command = "is" + devicename + commandbits + "\n"

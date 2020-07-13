@@ -1,6 +1,4 @@
 #!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""Helper class to encapsulate serial communication with CUL device"""
 
 import sys
 import logging
@@ -10,15 +8,15 @@ import serial
 class Cul(object):
     """Helper class to encapsulate serial communication with CUL device"""
 
-    serial = ""
-
     def __init__(self, serial_port):
         """Create instance with a given serial port"""
         try:
             self.serial = serial.Serial(port=serial_port, baudrate=115200, timeout=1)
         except serial.SerialException as e:
-            logging.error("Could not open CUL device %s", e)
-            sys.exit(1)
+            logging.error("Could not open CUL device: %s", e)
+            # TODO: for testing only:
+            self.serial = sys.stdout
+            #sys.exit(1)
 
     def get_cul_version(self):
         """Get CUL version"""
