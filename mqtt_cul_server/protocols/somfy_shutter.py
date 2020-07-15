@@ -173,6 +173,8 @@ class SomfyShutter:
                 self.send_command("down", device)
             elif command == "STOP":
                 self.send_command("my", device)
+            elif command == "PROG":
+                self.send_command("prog", device)
             else:
                 raise ValueError("Command %s is not supported", command)
 

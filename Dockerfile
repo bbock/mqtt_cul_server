@@ -1,15 +1,17 @@
-FROM python:3.7-stretch
+FROM python:3.8-slim
 
-# build with --pull --no-cache to get security updates
+LABEL org.opencontainers.image.url="https://github.com/bbock/mqtt_cul_server"
+LABEL org.opencontainers.image.authors="Bernhard Bock <bernhard@bock.nu>"
+LABEL org.opencontainers.image.licenses="GPL-3.0"
+LABEL org.opencontainers.image.title="MQTT CUL server"
+LABEL org.opencontainers.image.description="Bridge to connect a CUL wireless transceiver with an MQTT broker"
 
-COPY requirements.txt /tmp/
+WORKDIR /mqtt_cul_server
 
-RUN pip install -r /tmp/requirements.txt
+COPY . ./
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install .
 
-RUN useradd --create-home appuser
-WORKDIR /home/appuser
-USER appuser
+VOLUME /mqtt_cul_server/state
 
-COPY yourscript.py .
-
-CMD [ "python", "./yourscript.py" ]
+ENTRYPOINT [ "python", "mqtt_cul_server.py" ]
