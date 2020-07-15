@@ -4,7 +4,7 @@ This software package provides a bridge to connect a CUL wireless transceiver
 with an MQTT broker, so that multiple clients (smart home, other apps) can
 use it over the network to control various smart home devices.
 
-Currently it is used and tested with Somfy rollershutters and shades as well as
+Currently it is used and tested with Somfy RTS rollershutters and shades as well as
 Brennenstuhl RCS switchable power sockets (Intertechno-compatible).
 
 At the moment, this bridge is one-way only: MQTT -> CUL. Receiving messages via CUL
@@ -35,4 +35,5 @@ often also called house ID, in `mqtt_cul_server.ini` and enable it.
 
 ### Somfy
 
-Somfy configuration is a bit more involved. The documentation is [here](doc/somfy.md).
+Somfy RTS configuration is a bit more involved. The documentation is
+[here](doc/somfy.md).
