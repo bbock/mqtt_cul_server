@@ -3,3 +3,4 @@ env
 *.json
 .vscode
 state/
+__pycache__/

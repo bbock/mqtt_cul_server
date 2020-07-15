@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Control Somfy RTS blinds via CUL RF USB stick
 
@@ -149,7 +148,7 @@ class SomfyShutter:
         device.increase_rolling_code()
 
     def on_message(self, message):
-        prefix, devicetype, component, devicename = message.topic.split("/")
+        prefix, devicetype, component, address, topic = message.topic.split("/", 4)
         command = str(message.payload)
 
         if prefix != self.prefix:
@@ -162,17 +161,23 @@ class SomfyShutter:
 
         device = None
         for d in self.devices:
-            if d.state["name"] == devicename:
+            if d.state["address"] == address:
                 device = d
-                break
         if not device:
-            raise ValueError("Device not found")
+            raise ValueError("Device not found: %s", address)
 
-        if command == "OPEN":
-            self.send_command("up", device)
-        elif command == "CLOSE":
-            self.send_command("down", device)
-        elif command == "STOP":
-            self.send_command("my", device)
+        if topic == "set":
+            if command == "OPEN":
+                self.send_command("up", device)
+            elif command == "CLOSE":
+                self.send_command("down", device)
+            elif command == "STOP":
+                self.send_command("my", device)
+            else:
+                raise ValueError("Command %s is not supported", command)
+
+            command = "is" + devicename + commandbits + "\n"
+            self.send_command(command)
+
         else:
-            raise ValueError("Command %s is not supported", command)
+            logging.debug("ignoring topic %s", topic)

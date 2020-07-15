@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Control Intertechno devices via CUL RF USB stick
 
@@ -19,11 +18,10 @@ class Intertechno:
     wireless communication protocol.
     """
 
-    def __init__(self, cul, mqtt_client, prefix):
+    def __init__(self, cul, mqtt_client, prefix, config):
         self.cul = cul
 
-        # TODO: get system ID from config file
-        self.system_id = "0FF00"
+        self.system_id = config["system_id"]
         self.prefix = prefix
 
         # send messages for device discovery
@@ -67,7 +65,7 @@ class Intertechno:
             mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
 
     def on_message(self, message):
-        prefix, devicetype, component, devicename = message.topic.split("/")
+        prefix, devicetype, component, devicename, topic = message.topic.split("/", 4)
         command = str(message.payload)
 
         if prefix != self.prefix:
@@ -80,19 +78,22 @@ class Intertechno:
         if re.match(r"^[0F]{10}$", devicename) is None:
             raise ValueError("Intertechno device name does not match [0F]{10}")
 
-        if command == "ON":
-            commandbits = "FF"
-        elif command == "OFF":
-            commandbits = "F0"
-        else:
-            raise ValueError("Command %s is not supported", command)
-
         if devicename[0:5] != self.system_id:
             logging.info("Received command for different Intertechno system. Ignoring.")
             return
 
-        command = "is" + devicename + commandbits + "\n"
-        self.send_command(command)
+        if topic == "set":
+            if command == "ON":
+                commandbits = "FF"
+            elif command == "OFF":
+                commandbits = "F0"
+            else:
+                raise ValueError("Command %s is not supported", command)
+
+            command = "is" + devicename + commandbits + "\n"
+            self.send_command(command)
+        else:
+            logging.debug("ignoring topic %s", topic)
 
     def send_command(self, command):
         """Send command string via CUL device"""

@@ -27,8 +27,8 @@ For the CUL, you just need to configure the serial device of the dongle in
 
 ### Intertechno
 
-For Intertechno, you need to configure the system ID, often also called house ID,
-in `mqtt_cul_server.ini` and enable it.
+For Intertechno-based switches, you need to configure the system ID,
+often also called house ID, in `mqtt_cul_server.ini` and enable it.
 
 ### Somfy
 
@@ -42,16 +42,11 @@ file is:
   "name": "Badfenster",
   "device_class": "shutter",
   "address": "B0C004",
-  "enc_key": 6,
-  "rolling_code": 1258,
+  "enc_key": 3,
+  "rolling_code": 4125,
 }
 ```
 
 Currently, supported device classes are `shutter` and `shade`.
 
 TODO: Write how to pair / get initial values.
-
-## TODO
-
-- Improve device onboarding
-- Write some tests

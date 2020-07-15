@@ -8,28 +8,39 @@ from .protocols import somfy_shutter, intertechno
 class MQTT_CUL_Server:
     components = []
 
-    def __init__(
-        self,
-        cul_port="/dev/ttyACM0",
-        mqtt_host="127.0.0.1",
-        mqtt_port=1883,
-        prefix="homeassistant",
-    ):
-        self.cul = cul.Cul(cul_port)
-        self.mqtt_client = mqtt.Client()
-        self.prefix = prefix
+    def __init__(self, config={}):
+        self.cul = cul.Cul(config["DEFAULT"]["CUL"], test=True)
+        self.mqtt_client = self.get_mqtt_client(config["mqtt"])
 
-        self.mqtt_client.on_connect = self.on_connect
-        self.mqtt_client.on_message = self.on_message
+        # prefix for all MQTT topics
+        self.prefix = config["DEFAULT"]["prefix"]
 
-        self.components.append(intertechno.Intertechno(self.cul, self.mqtt_client, prefix))
-        self.components.append(somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, prefix))
+        if config["intertechno"].getboolean("enabled"):
+            self.components.append(
+                intertechno.Intertechno(self.cul, self.mqtt_client, self.prefix, config["intertechno"])
+            )
+        if config["somfy"].getboolean("enabled"):
+            self.components.append(
+                somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, self.prefix)
+            )
 
+    def get_mqtt_client(self, mqtt_config):
+        mqtt_client = mqtt.Client()
+        mqtt_client.enable_logger()
+        if "username" in mqtt_config and "password" in mqtt_config:
+            mqtt_client.username_pw_set(
+                mqtt_config["username"], mqtt_config["password"]
+            )
+        mqtt_client.on_connect = self.on_connect
+        mqtt_client.on_message = self.on_message
         try:
-            self.mqtt_client.connect(mqtt_host, mqtt_port, keepalive=60)
+            mqtt_client.connect(
+                mqtt_config["host"], int(mqtt_config["port"]), keepalive=60
+            )
         except Exception as e:
             logging.error("Could not connect to MQTT broker", e)
             sys.exit(1)
+        return mqtt_client
 
     def on_connect(self, mqtt_client, _userdata, _flags, _rc):
         """The callback for when the MQTT client receives a CONNACK response"""
@@ -41,12 +52,12 @@ class MQTT_CUL_Server:
     def on_message(self, _client, _userdata, msg):
         """The callback for when a message is received"""
 
-        prefix, devicetype, component, devicename = msg.topic.split("/")
+        _, _, component, _ = msg.topic.split("/", 3)
 
         for c in self.components:
             if component == c.get_component_name():
                 c.on_message(msg)
-                break
+                return
 
         logging.warning("component %s unknown", msg.topic)
         raise ValueError
