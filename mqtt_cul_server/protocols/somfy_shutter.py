@@ -143,13 +143,13 @@ class SomfyShutter:
     def send_command(self, command, device):
         """Send command string via CUL device"""
         command_string = self.command_string(command, device)
-        logging.info("sending command string %s to %s", command_string, device.name)
+        logging.info("sending command string %s to %s", command_string, device.state["name"])
         self.cul.send_command(command_string)
         device.increase_rolling_code()
 
     def on_message(self, message):
         prefix, devicetype, component, address, topic = message.topic.split("/", 4)
-        command = str(message.payload)
+        command = message.payload.decode()
 
         if prefix != self.prefix:
             logging.info("Ignoring message due to prefix")
@@ -177,9 +177,5 @@ class SomfyShutter:
                 self.send_command("prog", device)
             else:
                 raise ValueError("Command %s is not supported", command)
-
-            command = "is" + devicename + commandbits + "\n"
-            self.send_command(command)
-
         else:
             logging.debug("ignoring topic %s", topic)

@@ -46,7 +46,6 @@ class Intertechno:
         unit_ids = ["0FFFF", "F0FFF", "FF0FF", "FFF0F", "FFFF0"]
 
         configuration = {
-            "device_class": "switch",
             "command_topic": "~/set",
             "payload_on": "ON",
             "payload_off": "OFF",
@@ -66,7 +65,7 @@ class Intertechno:
 
     def on_message(self, message):
         prefix, devicetype, component, devicename, topic = message.topic.split("/", 4)
-        command = str(message.payload)
+        command = message.payload.decode()
 
         if prefix != self.prefix:
             logging.info("Ignoring message due to prefix")
