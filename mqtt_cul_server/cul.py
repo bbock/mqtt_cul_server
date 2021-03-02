@@ -11,7 +11,9 @@ class Cul(object):
         """Create instance with a given serial port"""
         if test:
             self.serial = sys.stderr
+            self.test = True
         else:
+            self.test = False
             if not os.path.exists(serial_port):
                 raise ValueError("cannot find CUL device %s" % serial_port)
             try:
@@ -30,6 +32,9 @@ class Cul(object):
 
     def send_command(self, command_string):
         """Send command string to serial port with CUL device"""
+        if self.test:
+            print(command_string.decode())
+        else:
         try:
             self.serial.write(command_string)
             self.serial.flush()

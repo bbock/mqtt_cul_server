@@ -23,6 +23,10 @@ class MQTT_CUL_Server:
             self.components.append(
                 somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, self.prefix)
             )
+        if config["lacrosse"].getboolean("enabled"):
+            self.components.append(
+                lacrosse.LaCrosse(self.cul, self.mqtt_client, self.prefix)
+            )
 
     def get_mqtt_client(self, mqtt_config):
         mqtt_client = mqtt.Client()
