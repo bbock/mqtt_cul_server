@@ -27,7 +27,8 @@ class Intertechno:
         # send messages for device discovery
         self.send_discovery(mqtt_client)
 
-    def get_component_name(self):
+    @classmethod
+    def get_component_name(cls):
         return "intertechno"
 
     def send_discovery(self, mqtt_client):
@@ -46,6 +47,7 @@ class Intertechno:
         unit_ids = ["0FFFF", "F0FFF", "FF0FF", "FFF0F", "FFFF0"]
 
         configuration = {
+            "device_class": "switch",
             "command_topic": "~/set",
             "payload_on": "ON",
             "payload_off": "OFF",

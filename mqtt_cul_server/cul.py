@@ -35,9 +35,15 @@ class Cul(object):
         if self.test:
             print(command_string.decode())
         else:
-        try:
-            self.serial.write(command_string)
-            self.serial.flush()
-        except serial.SerialException as e:
-            logging.error("Could not send command to CUL device %s", e)
-            sys.exit(1)
+            try:
+                self.serial.write(command_string)
+                self.serial.flush()
+            except serial.SerialException as e:
+                logging.error("Could not send command to CUL device %s", e)
+                sys.exit(1)
+
+    def listen(self, callback):
+        while True:
+            # readline() blocks until message is available
+            message = self.serial.readline().decode("utf-8")
+            callback(message)

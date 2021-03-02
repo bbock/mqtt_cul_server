@@ -53,7 +53,8 @@ class SomfyShutter:
             # send messages for device discovery
             self.send_discovery(device, mqtt_client)
 
-    def get_component_name(self):
+    @classmethod
+    def get_component_name(cls):
         return "somfy"
 
     def send_discovery(self, device, mqtt_client):

@@ -15,4 +15,4 @@ if __name__ == "__main__":
         logger.setLevel(logging.DEBUG)
 
     mcs = MQTT_CUL_Server(config=config)
-    mcs.listen()
+    mcs.start()
