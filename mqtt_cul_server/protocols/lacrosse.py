@@ -82,7 +82,7 @@ class LaCrosse:
             if data[START_MARKER] != "9":
                 raise ValueError("cant decode")
             parsed_data["id"] = (int(data[ID], base=16) & 0x3F) >> 2
-            parsed_data["temperature"] = int(data[TEMPERATURE]) / 10 - 40
+            parsed_data["temperature"] = round(int(data[TEMPERATURE]) / 10 - 40, 1)
             parsed_data["humidity"] = int(data[HUMIDITY], base=16) & 0x7F
             if parsed_data["humidity"] == 106:
                 # 106 means no such sensor
@@ -102,9 +102,13 @@ class LaCrosse:
             pass
         return parsed_data
 
+    def on_message(self, message):
+        # we ignore MQTT commands for lacrosse, it is receive-only
+        pass
+
     def on_rf_message(self, message):
         decoded = self.decode_rx_data(message)
-        topic = self.prefix + "/sensor/lacrosse/" + decoded["id"] + "/state"
+        topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
         del(decoded["id"])
         self.mqtt_client.publish(topic, payload=json.dumps(decoded), retain=True)
 

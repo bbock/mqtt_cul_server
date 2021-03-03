@@ -19,7 +19,7 @@ class MQTT_CUL_Server:
         if config["intertechno"].getboolean("enabled"):
             self.components["intertechno"] = intertechno.Intertechno(self.cul, self.mqtt_client, self.prefix, config["intertechno"])
         if config["somfy"].getboolean("enabled"):
-            self.components["somfy_shutter"] = somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, self.prefix)
+            self.components["somfy"] = somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, self.prefix)
         if config["lacrosse"].getboolean("enabled"):
             self.components["lacrosse"] = lacrosse.LaCrosse(self.cul, self.mqtt_client, self.prefix)
 
@@ -54,11 +54,12 @@ class MQTT_CUL_Server:
         if component in self.components:
             self.components[component].on_message(msg)
         else:
-            logging.warning("component %s unknown", msg.topic)
+            logging.warning("component %s unknown (topic %s)", component, msg.topic)
             raise ValueError
 
     def on_rf_message(self, message):
         """Handle message received via RF"""
+        if not message: return
         if message[0:3] == "N01":
             self.components["lacrosse"].on_rf_message(message)
         else:
