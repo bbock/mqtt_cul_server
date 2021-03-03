@@ -134,6 +134,6 @@ def test_decode_data():
     assert lacrosse.decode_rx_data("N0199E6282EC7AAAA0000719199") == {
         "id": 7,
         "battery": 100,
-        "temperature": 22.799999999999997,
+        "temperature": 22.8,
         "humidity": 46,
     }
