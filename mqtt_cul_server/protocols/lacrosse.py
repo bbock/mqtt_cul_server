@@ -109,6 +109,8 @@ class LaCrosse:
     def on_rf_message(self, message):
         decoded = self.decode_rx_data(message)
         topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
+        if decoded["id"] not in self.devices:
+            self.send_discovery(decoded)
         del(decoded["id"])
         self.mqtt_client.publish(topic, payload=json.dumps(decoded), retain=True)
 
