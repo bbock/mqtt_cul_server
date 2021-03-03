@@ -47,11 +47,17 @@ class LaCrosse:
         configuration = {
             "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_temperature",
             "device_class": "temperature",
-            "name": "LaCrosse " + unit_id + " temperature",
+            "name": "Temperature",
             "unique_id": "lacrosse/" + unit_id + "_temperature",
             "unit_of_measurement": "°C",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.temperature}}",
+            "device": {
+                "name": "Temperatur / Luftfeuchtesensor " + unit_id,
+                "identifiers": "lacrosse/" + unit_id,
+                "model": "TX29 DTH-IT",
+                "manufacturer": "LaCrosse"
+            },
         }
         topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_temperature/config"
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
@@ -59,11 +65,17 @@ class LaCrosse:
         configuration = {
             "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_humidity",
             "device_class": "humidity",
-            "name": "LaCrosse " + unit_id + " humidity",
+            "name": "Humidity",
             "unique_id": "lacrosse/" + unit_id + "_humidity",
             "unit_of_measurement": "%",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.humidity}}",
+            "device": {
+                "name": "Temperatur / Luftfeuchtesensor " + unit_id,
+                "identifiers": "lacrosse/" + unit_id,
+                "model": "TX29 DTH-IT",
+                "manufacturer": "LaCrosse"
+            },
         }
         topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_humidity/config"
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
@@ -71,11 +83,17 @@ class LaCrosse:
         configuration = {
             "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_battery",
             "device_class": "battery",
-            "name": "LaCrosse " + unit_id + " battery",
+            "name": "Battery",
             "unique_id": "lacrosse/" + unit_id + "_battery",
             "unit_of_measurement": "%",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.battery}}",
+            "device": {
+                "name": "Temperatur / Luftfeuchtesensor " + unit_id,
+                "identifiers": "lacrosse/" + unit_id,
+                "model": "TX29 DTH-IT",
+                "manufacturer": "LaCrosse"
+            },
         }
         topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_battery/config"
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
