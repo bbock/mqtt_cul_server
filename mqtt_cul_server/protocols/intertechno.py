@@ -47,7 +47,6 @@ class Intertechno:
         unit_ids = ["0FFFF", "F0FFF", "FF0FF", "FFF0F", "FFFF0"]
 
         configuration = {
-            "device_class": "switch",
             "command_topic": "~/set",
             "payload_on": "ON",
             "payload_off": "OFF",
