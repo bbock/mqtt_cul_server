@@ -1,4 +1,5 @@
 import json
+import logging
 from .. import cul
 
 class LaCrosse:
@@ -39,36 +40,45 @@ class LaCrosse:
         https://www.home-assistant.io/docs/mqtt/discovery/
         https://www.home-assistant.io/integrations/sensor.mqtt/
         """
-        unit_id = parsed_data["id"]
+        # register id as known to not send discovery every time
+        self.devices.append(parsed_data["id"])
+        unit_id = str(parsed_data["id"])
         # temperature
         configuration = {
             "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_temperature",
             "device_class": "temperature",
             "name": "LaCrosse " + unit_id + " temperature",
-            "unique_id": "lacrosse_" + unit_id + "_temperature",
+            "unique_id": "lacrosse/" + unit_id + "_temperature",
             "unit_of_measurement": "°C",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.temperature}}",
-            "battery_level_template": "{{value_json.battery}}",
         }
-        topic = self.prefix + "/sensor/lacrosse/" + parsed_data["id"] + "_temperature/config"
+        topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_temperature/config"
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
         # humidity
         configuration = {
             "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_humidity",
             "device_class": "humidity",
             "name": "LaCrosse " + unit_id + " humidity",
-            "unique_id": "lacrosse_" + unit_id + "_humidity",
+            "unique_id": "lacrosse/" + unit_id + "_humidity",
             "unit_of_measurement": "%",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.humidity}}",
-            "battery_level_template": "{{value_json.battery}}",
         }
-        topic = self.prefix + "/sensor/lacrosse/" + parsed_data["id"] + "_humidity/config"
+        topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_humidity/config"
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
-
-        # register id as known to not send discovery every time
-        self.devices.append()
+        # battery
+        configuration = {
+            "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_battery",
+            "device_class": "battery",
+            "name": "LaCrosse " + unit_id + " battery",
+            "unique_id": "lacrosse/" + unit_id + "_battery",
+            "unit_of_measurement": "%",
+            "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
+            "value_template": "{{value_json.battery}}",
+        }
+        topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_battery/config"
+        self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
 
     def decode_rx_data(self, data):
         START_MARKER = slice(3, 4)
@@ -95,24 +105,25 @@ class LaCrosse:
                 parsed_data["battery"] = 100
             else:
                 parsed_data["battery"] = 50
-            if parsed_data["id"] not in self.devices:
-                self.send_discovery(parsed_data)
         except:
             # decode error. we don't check CRC or do any error handling (yet)
             pass
         return parsed_data
 
     def on_message(self, message):
-        # we ignore MQTT commands for lacrosse, it is receive-only
+        # ignore MQTT commands for lacrosse, it is RF receive-only, no commands
         pass
 
     def on_rf_message(self, message):
         decoded = self.decode_rx_data(message)
-        topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
         if decoded["id"] not in self.devices:
+            logging.info("sending discovery for %d", decoded["id"])
             self.send_discovery(decoded)
+        else:
+            logging.info("known devices: %s", str(self.devices))
+        topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
         del(decoded["id"])
-        self.mqtt_client.publish(topic, payload=json.dumps(decoded), retain=True)
+        self.mqtt_client.publish(topic, payload=json.dumps(decoded))
 
 
 def test_decode_data():
