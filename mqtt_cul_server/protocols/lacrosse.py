@@ -45,16 +45,15 @@ class LaCrosse:
         unit_id = str(parsed_data["id"])
         # temperature
         configuration = {
-            "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_temperature",
             "device_class": "temperature",
-            "name": "Temperature",
+            "name": "LaCrosse " + unit_id + " Temperature",
             "unique_id": "lacrosse_" + unit_id + "_temperature",
             "unit_of_measurement": "°C",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.temperature}}",
             "device": {
                 "name": "Temperatur / Luftfeuchtesensor " + unit_id,
-                "identifiers": "lacrosse/" + unit_id,
+                "identifiers": "lacrosse_" + unit_id,
                 "model": "TX29 DTH-IT",
                 "manufacturer": "LaCrosse"
             },
@@ -63,16 +62,15 @@ class LaCrosse:
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
         # humidity
         configuration = {
-            "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_humidity",
             "device_class": "humidity",
-            "name": "Humidity",
+            "name": "LaCrosse " + unit_id + " Humidity",
             "unique_id": "lacrosse_" + unit_id + "_humidity",
             "unit_of_measurement": "%",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.humidity}}",
             "device": {
                 "name": "Temperatur / Luftfeuchtesensor " + unit_id,
-                "identifiers": "lacrosse/" + unit_id,
+                "identifiers": "lacrosse_" + unit_id,
                 "model": "TX29 DTH-IT",
                 "manufacturer": "LaCrosse"
             },
@@ -81,16 +79,15 @@ class LaCrosse:
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
         # battery
         configuration = {
-            "~": self.prefix + "/sensor/lacrosse/" + unit_id + "_battery",
             "device_class": "battery",
-            "name": "Battery",
+            "name": "LaCrosse " + unit_id + " Battery",
             "unique_id": "lacrosse_" + unit_id + "_battery",
             "unit_of_measurement": "%",
             "state_topic": self.prefix + "/sensor/lacrosse/" + unit_id + "/state",
             "value_template": "{{value_json.battery}}",
             "device": {
                 "name": "Temperatur / Luftfeuchtesensor " + unit_id,
-                "identifiers": "lacrosse/" + unit_id,
+                "identifiers": "lacrosse_" + unit_id,
                 "model": "TX29 DTH-IT",
                 "manufacturer": "LaCrosse"
             },
@@ -141,7 +138,7 @@ class LaCrosse:
             logging.info("known devices: %s", str(self.devices))
         topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
         del(decoded["id"])
-        self.mqtt_client.publish(topic, payload=json.dumps(decoded))
+        self.mqtt_client.publish(topic, payload=json.dumps(decoded), retain=False)
 
 
 def test_decode_data():
