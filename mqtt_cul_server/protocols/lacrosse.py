@@ -131,6 +131,9 @@ class LaCrosse:
 
     def on_rf_message(self, message):
         decoded = self.decode_rx_data(message)
+        if "id" not in decoded:
+            logging.info("unhandled: no ID in %s", decoded)
+            return
         if decoded["id"] not in self.devices:
             logging.info("sending discovery for %d", decoded["id"])
             self.send_discovery(decoded)

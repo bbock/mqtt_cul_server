@@ -46,5 +46,6 @@ class Cul(object):
         while True:
             # readline() blocks until message is available
             message = self.serial.readline().decode("utf-8")
-            logging.debug("Received RF message: %s", message)
+            if message:
+                logging.debug("Received RF message: %s", message)
             callback(message)
