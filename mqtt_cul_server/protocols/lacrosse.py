@@ -1,3 +1,4 @@
+import crc8
 import json
 import logging
 from .. import cul
@@ -20,17 +21,17 @@ class LaCrosse:
         self.prefix = prefix
         self.mqtt_client = mqtt_client
         self.devices = []
-
-        # send messages for device discovery
-        # self.send_discovery(mqtt_client)
-
-        # enable listening for Native RF mode 1
-        command_string = "Nr1\n".encode()
-        self.cul.send_command(command_string)
+        self.set_listening_mode()
 
     @classmethod
     def get_component_name(cls):
         return "lacrosse"
+
+    def set_listening_mode(self):
+        """Enable listening for Native RF mode 1"""
+        command_string = "Nr1\n".encode()
+        self.cul.send_command(command_string)
+
 
     def send_discovery(self, parsed_data):
         """
@@ -102,10 +103,13 @@ class LaCrosse:
         ID           = slice(4, 6)
         TEMPERATURE  = slice(6, 9)
         HUMIDITY     = slice(9, 11)
+        ALL_DATA     = slice(3, 11)
         CRC          = slice(11, 13)
 
         parsed_data = {}
         try:
+            if len(data) != 27:
+                raise ValueError("cant decode")
             if data[START_MARKER] != "9":
                 raise ValueError("cant decode")
             parsed_data["id"] = (int(data[ID], base=16) & 0x3F) >> 2
@@ -124,7 +128,19 @@ class LaCrosse:
                 parsed_data["battery"] = 50
         except:
             # decode error. we don't check CRC or do any error handling (yet)
-            pass
+            logging.info("decode error: %s", data)
+
+        # CRC check, currently only logs result as some correct messages cannot
+        # be successfuly validated yet.
+        received_crc = int(data[CRC][1]+data[CRC][0], base=16)
+        calculated_crc = crc8.crc8()
+        calculated_crc.update(bytes.fromhex(data[ALL_DATA]))
+        calculated_crc = int(calculated_crc.hexdigest(), base=16)
+        if received_crc != calculated_crc:
+            logging.warning("device %d CRC NOT ok: received: 0x%02X, calculated: 0x%02X", parsed_data["id"], received_crc, calculated_crc)
+        else:
+            logging.debug("device %d, CRC ok: 0x%02X", parsed_data["id"], calculated_crc)
+
         return parsed_data
 
     def on_message(self, message):
@@ -150,10 +166,27 @@ def test_decode_data():
     """Test LaCrosse data parsing"""
     cul_device = cul.Cul("", test=True)
     lacrosse = LaCrosse(cul_device, None, None)
-    print(lacrosse.decode_rx_data("N0199E6282EC7AAAA0000719199"))
     assert lacrosse.decode_rx_data("N0199E6282EC7AAAA0000719199") == {
         "id": 7,
         "battery": 100,
         "temperature": 22.8,
         "humidity": 46,
     }
+    assert lacrosse.decode_rx_data("N019986373FC9AAAA0000000783") == {
+        "id": 6,
+        "battery": 50,
+        "temperature": 23.7,
+        "humidity": 63,
+    }
+
+def test_crc():
+    cul_device = cul.Cul("", test=True)
+    lacrosse = LaCrosse(cul_device, None, None)
+    messages = [
+        "N019EC615414BAAAA0000571601",
+        "N019986373FC9AAAA0000109880",
+        "N019986373EF8AAAA000002B204",
+        "N019986363E0CAAAA000001A4A0",
+    ]
+    for m in messages:
+        assert lacrosse.decode_rx_data(m)
