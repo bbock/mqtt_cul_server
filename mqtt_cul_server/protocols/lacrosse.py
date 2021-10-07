@@ -46,6 +46,7 @@ class LaCrosse:
         # temperature
         configuration = {
             "device_class": "temperature",
+            "state_class": "measurement",
             "name": "LaCrosse " + unit_id + " Temperature",
             "unique_id": "lacrosse_" + unit_id + "_temperature",
             "unit_of_measurement": "°C",
@@ -63,6 +64,7 @@ class LaCrosse:
         # humidity
         configuration = {
             "device_class": "humidity",
+            "state_class": "measurement",
             "name": "LaCrosse " + unit_id + " Humidity",
             "unique_id": "lacrosse_" + unit_id + "_humidity",
             "unit_of_measurement": "%",
