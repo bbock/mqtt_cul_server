@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
     if config["DEFAULT"].getboolean("verbose"):
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
 
     mcs = MQTT_CUL_Server(config=config)
     mcs.start()
