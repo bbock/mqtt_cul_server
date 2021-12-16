@@ -16,10 +16,12 @@ class MQTT_CUL_Server:
         # prefix for all MQTT topics
         self.prefix = config["DEFAULT"]["prefix"]
 
+        statedir = config["DEFAULT"]["statedir"] or "state"
+
         if config["intertechno"].getboolean("enabled"):
             self.components["intertechno"] = intertechno.Intertechno(self.cul, self.mqtt_client, self.prefix, config["intertechno"])
         if config["somfy"].getboolean("enabled"):
-            self.components["somfy"] = somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, self.prefix)
+            self.components["somfy"] = somfy_shutter.SomfyShutter(self.cul, self.mqtt_client, self.prefix, statedir)
         if config["lacrosse"].getboolean("enabled"):
             self.components["lacrosse"] = lacrosse.LaCrosse(self.cul, self.mqtt_client, self.prefix)
 

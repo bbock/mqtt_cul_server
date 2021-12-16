@@ -19,9 +19,9 @@ class SomfyShutter:
     """
 
     class SomfyShutterState:
-        def __init__(self, statefile):
+        def __init__(self, statedir, statefile):
             self.statefile = statefile
-            with open("state/somfy/" + statefile) as fh:
+            with open(statedir + "/somfy/" + statefile) as fh:
                 self.state = json.loads(fh.read())
 
         def save(self):
@@ -40,14 +40,14 @@ class SomfyShutter:
                 self.state["enc_key"] = 0x0
             self.save()
 
-    def __init__(self, cul, mqtt_client, prefix):
+    def __init__(self, cul, mqtt_client, prefix, statedir):
         self.cul = cul
         self.prefix = prefix
 
         self.devices = []
-        for statefile in os.listdir("state/somfy/"):
+        for statefile in os.listdir(statedir + "/somfy/"):
             if ".json" in statefile:
-                self.devices.append(self.SomfyShutterState(statefile))
+                self.devices.append(self.SomfyShutterState(statedir, statefile))
 
         for device in self.devices:
             # send messages for device discovery
