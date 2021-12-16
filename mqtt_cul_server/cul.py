@@ -37,7 +37,10 @@ class Cul(object):
         else:
             try:
                 self.serial.write(command_string)
+
+                # FIXME: this is lacrosse-specific and should not be in this class
                 self.serial.write(b"Nr1\n")
+
                 self.serial.flush()
             except serial.SerialException as e:
                 logging.error("Could not send command to CUL device %s", e)
@@ -46,12 +49,11 @@ class Cul(object):
 
     def listen(self, callback):
         while True:
+            # readline() blocks until message is available
             try:
-                # readline() blocks until message is available
                 message = self.serial.readline().decode("utf-8")
                 if message:
                     logging.debug("Received RF message: %s", message)
                 callback(message)
             except:
                 pass
-
