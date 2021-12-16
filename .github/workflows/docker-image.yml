@@ -1,8 +1,6 @@
 name: Docker Image CI
 
-on:
-  push:
-    branches: ['release']
+on: push
 
 env:
   REGISTRY: ghcr.io
@@ -23,5 +21,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push the Docker image
         run: |
-          docker build . --tag ${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.IMAGE_NAME }}:latest
+          docker build . --tag ghcr.io/${{ env.IMAGE_NAME }}:latest
+          docker push ghcr.io/${{ env.IMAGE_NAME }}:latest
