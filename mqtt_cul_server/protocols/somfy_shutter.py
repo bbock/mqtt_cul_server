@@ -20,14 +20,14 @@ class SomfyShutter:
 
     class SomfyShutterState:
         def __init__(self, statedir, statefile):
-            self.statefile = statefile
-            with open(statedir + "/somfy/" + statefile) as fh:
-                self.state = json.loads(fh.read())
+            self.statefile = statedir + "/somfy/" + statefile
+            with open(self.statefile, "r", encoding='utf8') as file_handle:
+                self.state = json.loads(file_handle.read())
 
         def save(self):
             """Save state to JSON file"""
-            with open("state/somfy/" + self.statefile, "w") as fh:
-                json.dump(self.state, fh)
+            with open(self.statefile, "w", encoding='utf8') as file_handle:
+                json.dump(self.state, file_handle)
 
         def increase_rolling_code(self):
             """Increment rolling_code, enc_key lower 4 bit and save to statefile"""
