@@ -1,0 +1,8 @@
+__pycache__/
+.DS_Store
+.envrc
+/.direnv/
+/.git/
+/.pytest/
+/.vscode/
+/state/

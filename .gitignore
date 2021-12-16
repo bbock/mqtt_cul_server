@@ -1,6 +1,6 @@
-env
 *.pyc
-*.json
-.vscode
-state/
+/.vscode/
+/state/
 __pycache__/
+/.direnv
+/.pytest/

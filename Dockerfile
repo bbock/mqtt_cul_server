@@ -1,4 +1,4 @@
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 LABEL org.opencontainers.image.url="https://github.com/bbock/mqtt_cul_server"
 LABEL org.opencontainers.image.authors="Bernhard Bock <bernhard@bock.nu>"
@@ -8,10 +8,10 @@ LABEL org.opencontainers.image.description="Bridge to connect a CUL wireless tra
 
 WORKDIR /mqtt_cul_server
 
-COPY . ./
+COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install .
+RUN pip install --no-cache-dir .
 
-VOLUME /mqtt_cul_server/state
+VOLUME /state
 
 ENTRYPOINT [ "python", "mqtt_cul_server.py" ]
