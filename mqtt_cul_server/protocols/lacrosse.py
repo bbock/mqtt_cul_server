@@ -109,7 +109,7 @@ class LaCrosse:
         parsed_data = {}
         try:
             if len(data) != 27:
-                raise ValueError("cant decode: wrong message length")
+                logging.debug("unexpected message length %d: %s", len(data), data)
             if data[START_MARKER] != "9":
                 raise ValueError("cant decode: wrong start marker")
             parsed_data["id"] = (int(data[ID], base=16) & 0x3F) >> 2
@@ -137,7 +137,7 @@ class LaCrosse:
         calculated_crc.update(bytes.fromhex(data[ALL_DATA]))
         calculated_crc = int(calculated_crc.hexdigest(), base=16)
         if received_crc != calculated_crc:
-            logging.warning("device %d CRC NOT ok: received: 0x%02X, calculated: 0x%02X", parsed_data["id"], received_crc, calculated_crc)
+            logging.debug("device %d CRC NOT ok: received: 0x%02X, calculated: 0x%02X", parsed_data["id"], received_crc, calculated_crc)
         else:
             logging.debug("device %d, CRC ok: 0x%02X", parsed_data["id"], calculated_crc)
 
