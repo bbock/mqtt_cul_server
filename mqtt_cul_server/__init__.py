@@ -54,13 +54,13 @@ class MQTT_CUL_Server:
         try:
             _, _, component, _ = msg.topic.split("/", 3)
         except ValueError:
-            logging.warning("cannot parse topic: %s", msg.topic)
+            logging.debug("cannot parse topic: %s", msg.topic)
             return
 
         if component in self.components:
             self.components[component].on_message(msg)
         else:
-            logging.warning("component %s unknown (topic %s)", component, msg.topic)
+            logging.debug("component %s unknown (topic %s)", component, msg.topic)
 
     def on_rf_message(self, message):
         """Handle message received via RF"""

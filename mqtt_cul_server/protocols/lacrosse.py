@@ -156,7 +156,7 @@ class LaCrosse:
             logging.info("sending discovery for %d", decoded["id"])
             self.send_discovery(decoded)
         else:
-            logging.info("known devices: %s", str(self.devices))
+            logging.debug("known devices: %s", str(self.devices))
         topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
         del(decoded["id"])
         self.mqtt_client.publish(topic, payload=json.dumps(decoded), retain=False)
