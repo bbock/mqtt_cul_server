@@ -109,9 +109,9 @@ class LaCrosse:
         parsed_data = {}
         try:
             if len(data) != 27:
-                raise ValueError("cant decode")
+                raise ValueError("cant decode: wrong message length")
             if data[START_MARKER] != "9":
-                raise ValueError("cant decode")
+                raise ValueError("cant decode: wrong start marker")
             parsed_data["id"] = (int(data[ID], base=16) & 0x3F) >> 2
             parsed_data["temperature"] = round(int(data[TEMPERATURE]) / 10 - 40, 1)
             parsed_data["humidity"] = int(data[HUMIDITY], base=16) & 0x7F
@@ -128,7 +128,7 @@ class LaCrosse:
                 parsed_data["battery"] = 50
         except:
             # decode error. we don't check CRC or do any error handling (yet)
-            logging.info("decode error: %s", data)
+            logging.info("decode error: %s", data, exc_info=True)
 
         # CRC check, currently only logs result as some correct messages cannot
         # be successfuly validated yet.
