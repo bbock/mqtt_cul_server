@@ -157,7 +157,7 @@ class LaCrosse:
         pass
 
     def on_rf_message(self, message):
-        decoded = self.decode_rx_data(message)
+        decoded = self.decode_rx_data(message.strip())
         if "id" not in decoded:
             # message could not be decoded, ignore
             return
@@ -204,3 +204,15 @@ def test_crc():
         assert lacrosse.decode_rx_data(m)
     for m in bad_messages:
         assert not lacrosse.decode_rx_data(m)
+
+def test_real_data():
+    cul_device = cul.Cul("", test=True)
+    lacrosse = LaCrosse(cul_device, None, None)
+    messages = [
+        "N019A86414280AAAA0000480473",
+        "N019A864143B1AAAA00000B3897",
+        "N019A864143B1AAAA000015DA99",
+        "N019A86414280AAAA0000090092",
+    ]
+    for m in messages:
+        logging.info(lacrosse.decode_rx_data(m))
