@@ -1,7 +1,8 @@
-import crc8
 import json
 import logging
+
 from .. import cul
+
 
 class LaCrosse:
     """
@@ -98,6 +99,20 @@ class LaCrosse:
         topic = self.prefix + "/sensor/lacrosse/" + unit_id + "_battery/config"
         self.mqtt_client.publish(topic, payload=json.dumps(configuration), retain=True)
 
+    def crc(self, data):
+        """calculate CRC-8 with poly = 0x31 """
+        crc = 0
+        for byte in data:
+            val = byte
+            for _ in range(8):
+                do_xor = (crc ^ val) & 0x80
+                crc = (crc << 1) & 0xff
+                if do_xor:
+                    crc ^= 0x31
+                val = (val << 1) & 0xff
+        return crc
+
+
     def decode_rx_data(self, data):
         START_MARKER = slice(3, 4)
         ID           = slice(4, 6)
@@ -109,9 +124,14 @@ class LaCrosse:
         parsed_data = {}
         try:
             if len(data) != 27:
-                logging.debug("unexpected message length %d: %s", len(data), data)
+                raise ValueError(f"unexpected message length {len(data)}: {data}")
             if data[START_MARKER] != "9":
                 raise ValueError("cant decode: wrong start marker")
+            received_crc = int(data[CRC][0]+data[CRC][1], base=16)
+            calculated_crc = self.crc(bytes.fromhex(data[ALL_DATA]))
+            if received_crc != calculated_crc:
+                raise ValueError(f"CRC failure: received 0x{received_crc:08b}, " \
+                                 f"calculated 0x{calculated_crc:08b}")
             parsed_data["id"] = (int(data[ID], base=16) & 0x3F) >> 2
             parsed_data["temperature"] = round(int(data[TEMPERATURE]) / 10 - 40, 1)
             parsed_data["humidity"] = int(data[HUMIDITY], base=16) & 0x7F
@@ -126,21 +146,10 @@ class LaCrosse:
                 parsed_data["battery"] = 100
             else:
                 parsed_data["battery"] = 50
-        except:
-            # decode error. we don't check CRC or do any error handling (yet)
-            logging.info("decode error: %s", data, exc_info=True)
-
-        # CRC check, currently only logs result as some correct messages cannot
-        # be successfuly validated yet.
-        received_crc = int(data[CRC][1]+data[CRC][0], base=16)
-        calculated_crc = crc8.crc8()
-        calculated_crc.update(bytes.fromhex(data[ALL_DATA]))
-        calculated_crc = int(calculated_crc.hexdigest(), base=16)
-        if received_crc != calculated_crc:
-            logging.debug("device %d CRC NOT ok: received: 0x%02X, calculated: 0x%02X", parsed_data["id"], received_crc, calculated_crc)
-        else:
-            logging.debug("device %d, CRC ok: 0x%02X", parsed_data["id"], calculated_crc)
-
+        except ValueError as e:
+            # decode error. log problem and ignore message / data
+            logging.info(f"decode error for {data}: {e}")
+            parsed_data = {}
         return parsed_data
 
     def on_message(self, message):
@@ -158,7 +167,7 @@ class LaCrosse:
         else:
             logging.debug("known devices: %s", str(self.devices))
         topic = self.prefix + "/sensor/lacrosse/" + str(decoded["id"]) + "/state"
-        del(decoded["id"])
+        del decoded["id"]
         self.mqtt_client.publish(topic, payload=json.dumps(decoded), retain=False)
 
 
@@ -182,11 +191,16 @@ def test_decode_data():
 def test_crc():
     cul_device = cul.Cul("", test=True)
     lacrosse = LaCrosse(cul_device, None, None)
-    messages = [
+    good_messages = [
         "N019EC615414BAAAA0000571601",
         "N019986373FC9AAAA0000109880",
         "N019986373EF8AAAA000002B204",
         "N019986363E0CAAAA000001A4A0",
     ]
-    for m in messages:
+    bad_messages = [
+        "N019ECE33398CAAAA0000A17C69",
+    ]
+    for m in good_messages:
         assert lacrosse.decode_rx_data(m)
+    for m in bad_messages:
+        assert not lacrosse.decode_rx_data(m)
