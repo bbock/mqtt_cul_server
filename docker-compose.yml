@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mqtt_cul_server:
+    container_name: mqtt_cul_server
+    image: ghcr.io/bbock/mqtt_cul_server
+    volumes:
+      - ./state:/state
+      - ./mqtt_cul_server.ini:/mqtt_cul_server/mqtt_cul_server.ini
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0
+    restart: always
+    network_mode: host
+    privileged: true
+    environment:
+      - TZ=Europe/Berlin

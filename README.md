@@ -10,6 +10,9 @@ and LaCrosse IT+ temperature / humidity sensors (Technoline TX29 DTH-IT) for rec
 
 Further information about the CUL: [Product page](http://busware.de/tiki-index.php?page=CUL), [firmware details](http://culfw.de/).
 
+This software is provided not only as source code, but also as Docker image for
+ARMv7 processors (Raspberry Pi). An example `docker-compose.yml` is included.
+
 ## Device discovery
 
 [Home Assistant](https://www.home-assistant.io/) defines an [interface for device
