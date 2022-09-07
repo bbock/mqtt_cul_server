@@ -10,7 +10,7 @@ class MQTT_CUL_Server:
     components = {}
 
     def __init__(self, config={}):
-        self.cul = cul.Cul(config["DEFAULT"]["CUL"])
+        self.cul = cul.Cul(config["DEFAULT"]["CUL"], int(config["DEFAULT"]["baud_rate"]))
         self.mqtt_client = self.get_mqtt_client(config["mqtt"])
 
         # prefix for all MQTT topics

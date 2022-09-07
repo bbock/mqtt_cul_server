@@ -7,7 +7,7 @@ import serial
 class Cul(object):
     """Helper class to encapsulate serial communication with CUL device"""
 
-    def __init__(self, serial_port, test=False):
+    def __init__(self, serial_port, baud_rate=115200, test=False):
         """Create instance with a given serial port"""
         if test:
             self.serial = sys.stderr
@@ -18,7 +18,7 @@ class Cul(object):
                 raise ValueError("cannot find CUL device %s" % serial_port)
             try:
                 self.serial = serial.Serial(
-                    port=serial_port, baudrate=115200, timeout=1
+                    port=serial_port, baudrate=baud_rate, timeout=1
                 )
             except serial.SerialException as e:
                 logging.error("Could not open CUL device: %s", e)
