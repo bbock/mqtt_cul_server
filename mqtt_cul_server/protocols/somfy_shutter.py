@@ -149,7 +149,7 @@ class SomfyShutter:
         device.increase_rolling_code()
 
     def on_message(self, message):
-        prefix, devicetype, component, address, topic = message.topic.split("/", 4)
+        prefix, devicetype, component, address, topic = message.topic.rsplit("/", 4)
         command = message.payload.decode()
 
         if prefix != self.prefix:
