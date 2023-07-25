@@ -6,11 +6,15 @@ LABEL org.opencontainers.image.licenses="GPL-3.0"
 LABEL org.opencontainers.image.title="MQTT CUL server"
 LABEL org.opencontainers.image.description="Bridge to connect a CUL wireless transceiver with an MQTT broker"
 
+ENV PYTHONUNBUFFERED 1
+ENV POETRY_VIRTUALENVS_CREATE false
+
 WORKDIR /mqtt_cul_server
 
 COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir .
+RUN pip --no-cache-dir install poetry
+COPY entrypoint.sh pyproject.toml poetry.lock /
+RUN poetry install --no-dev
 
 VOLUME /state
 
