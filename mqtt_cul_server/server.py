@@ -3,7 +3,7 @@
 import configparser
 import logging
 
-from mqtt_cul_server import MQTT_CUL_Server
+from mqtt_cul_server.mqtt_cul_server import MQTT_CUL_Server
 
 if __name__ == "__main__":
     """Control devices via MQTT and CUL RF USB stick"""

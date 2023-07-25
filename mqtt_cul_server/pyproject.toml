@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "mqtt_cul_server"
 version = "0.2.0"
-description = "Home Assistant Addon for using CUL RF stick with MQTT"
+description = "Home Assistant Addon to connect a CUL wireless transceiver"
 authors = ["Bernhard Bock <bernhard@bock.nu>"]
+license = "GPL"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -15,3 +16,4 @@ pylint = "^2.13.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
