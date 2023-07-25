@@ -1,5 +1,9 @@
 # MQTT CUL server
 
+** THIS BRANCH IS WORK-IN-PROGRESS FOR CONVERTING THIS INTO AN HA ADDON. IT IS
+NOT FUNCTIONAL YET. PLEASE USE THE MASTER BRANCH AS SIMPLE DOCKER CONTAINER FOR
+NOW. **
+
 This software package provides a bridge to connect a CUL wireless transceiver
 with an MQTT broker, so that multiple clients (smart home, other apps) can
 use it over the network to control various smart home devices.
