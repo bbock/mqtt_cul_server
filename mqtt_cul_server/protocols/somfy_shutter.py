@@ -30,14 +30,13 @@ class SomfyShutter:
                 json.dump(self.state, file_handle)
 
         def increase_rolling_code(self):
-            """Increment rolling_code, enc_key lower 4 bit and save to statefile"""
-            self.state["rolling_code"] += 1
-            # check for overflow
-            if self.state["rolling_code"] == 0x1000000:
-                self.state["rolling_code"] = 0
-            self.state["enc_key"] += 1
-            if self.state["enc_key"] == 0x10:
-                self.state["enc_key"] = 0x0
+            """
+            Increment rolling_code, roll over when crossing the 16 bit boundary.
+            Increment enc_key, roll over when crossing the 4 bit boundary.
+            Save updated state to statefile
+            """
+            self.state["rolling_code"] = (self.state["rolling_code"] + 1) % 0x10000
+            self.state["enc_key"]      = (self.state["enc_key"] + 1) % 0x10
             self.save()
 
     def __init__(self, cul, mqtt_client, prefix, statedir):
