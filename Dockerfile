@@ -13,9 +13,9 @@ WORKDIR /mqtt_cul_server
 
 COPY . .
 RUN pip --no-cache-dir install poetry
-COPY entrypoint.sh pyproject.toml poetry.lock /
-RUN poetry install --no-dev
+COPY pyproject.toml poetry.lock /
+RUN poetry install --only main
 
 VOLUME /state
 
-ENTRYPOINT [ "python", "mqtt_cul_server.py" ]
+ENTRYPOINT [ "python", "server.py" ]
