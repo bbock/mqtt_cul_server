@@ -9,6 +9,7 @@ env:
 jobs:
   docker_image:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
